@@ -1,21 +1,24 @@
-# Header-Uebersicht
+# Design of the Chess-Engine
+(Diagram in German)
+![vgl.|598](resources/schach_architektur_uebersicht.svg)
+# Header Overview
 
-Reine Klassendeklarationen entsprechend der besprochenen Architektur, noch ohne `.cpp`-Implementierungen.
+Pure class declarations according to the architecture described above.
 
-| Datei | Verantwortung |
+| File | Responsibility |
 |---|---|
-| `Types.h` | Grundtypen: `Color`, `PieceType`, `Square`, `GameResult`, Rochaderechte |
-| `Move.h` | Leichtgewichtiger Zug-Wertetyp inkl. Spezialfaellen (Rochade, En passant, Promotion) |
-| `Board.h` | Stellung, `makeMove`/`undoMove`, Schach-/Ergebnisabfragen, FEN |
-| `MoveGenerator.h` | Pseudo-legale und legale Zugerzeugung |
-| `Evaluator.h` / `MaterialEvaluator.h` / `PositionalEvaluator.h` | Austauschbare Bewertungsfunktionen (Strategy-Pattern) |
-| `TranspositionTable.h` | Zobrist-Hash-Cache fuer bereits berechnete Stellungen |
-| `SearchEngine.h` / `MinimaxSearch.h` / `AlphaBetaSearch.h` / `IterativeDeepeningSearch.h` | Austauschbare Suchalgorithmen (Strategy-Pattern) |
-| `Player.h` | Abstrahiert Mensch vs. Engine als Zugquelle |
-| `UserInterface.h` | Entkoppelt Anzeige (Konsole/GUI/UCI) vom Rest |
-| `GameController.h` | Orchestriert Spielablauf, Historie, Spielerwechsel |
+| `Types.h` | Basic types: `Color`, `PieceType`, `Square`, `GameResult`, Castling rights |
+| `Move.h` | Lightweight move value type including special cases (Castling, En passant, Promotion) |
+| `Board.h` | Position, `makeMove`/`undoMove`, Check/result queries, FEN |
+| `MoveGenerator.h` | Pseudo-legal and legal move generation |
+| `Evaluator.h` / `MaterialEvaluator.h` / `PositionalEvaluator.h` | Interchangeable evaluation functions (Strategy Pattern) |
+| `TranspositionTable.h` | Zobrist Hash cache for previously calculated positions |
+| `SearchEngine.h` / `MinimaxSearch.h` / `AlphaBetaSearch.h` / `IterativeDeepeningSearch.h` | Interchangeable search algorithms (Strategy Pattern) |
+| `Player.h` | Abstracts Human vs. Engine as a source of moves |
+| `UserInterface.h` | Decouples display (Console/GUI/UCI) from the rest |
+| `GameController.h` | Orchestrates game flow, history, and turn switching |
 
-## Abhaengigkeitsrichtung
+## Dependency Direction
 
 ```
 UserInterface  <---  GameController  --->  Player (Human/Engine)
@@ -29,10 +32,3 @@ UserInterface  <---  GameController  --->  Player (Human/Engine)
                                           v
                                 TranspositionTable (optional)
 ```
-
-## Naechste sinnvolle Schritte
-
-1. `Board`/`MoveGenerator` implementieren und per Perft-Test gegen bekannte Referenzwerte validieren (z.B. Kiwipete-Stellung), **bevor** die Suche implementiert wird.
-2. `MaterialEvaluator` + `MinimaxSearch` als einfachste lauffaehige Kombination implementieren.
-3. Danach `AlphaBetaSearch` implementieren und mit `MinimaxSearch` auf identische Ergebnisse (bei geringerer Knotenzahl) pruefen.
-4. `TranspositionTable` und `IterativeDeepeningSearch` als Ausbaustufe ergaenzen.
