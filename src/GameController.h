@@ -12,17 +12,17 @@
 
 namespace chess {
 
-// Ein Eintrag der Partie-Historie: Zug plus der zum Zuruecknehmen noetige
-// Zustand sowie der Zobrist-Hash vor dem Zug (fuer Stellungswiederholung).
+// A game history entry: the move, plus the state required for
+// undoing it, as well as the Zobrist hash before the move (for position repetition).
 struct HistoryEntry {
     Move move;
     UndoInfo undoInfo;
     uint64_t hashBeforeMove = 0;
 };
 
-// Zentrale Orchestrierungsklasse. Kennt weder Details der Zuggenerierung
-// noch der Suchalgorithmen - sie delegiert an Board/MoveGenerator bzw. an
-// die jeweiligen Player-Implementierungen.
+// Central orchestration class. It is unaware of the details of
+// move generation or search algorithms—it delegates these to Board/MoveGenerator
+// or to the respective Player implementations.
 class GameController {
 public:
     explicit GameController(std::shared_ptr<UserInterface> ui);
@@ -33,13 +33,13 @@ public:
     void setWhitePlayer(std::unique_ptr<Player> player);
     void setBlackPlayer(std::unique_ptr<Player> player);
 
-    // Fuehrt genau einen Halbzug der aktuell am Zug befindlichen Seite aus
-    // (fragt je nach Player-Typ den Menschen oder die Suche) und
-    // aktualisiert Historie sowie Spielergebnis.
+    // Executes exactly one half-move of the side currently to move
+    // (queries either a human or an engine search, depending on the Player type)
+    // and updates the history as well as the game result.
     void playNextHalfMove(const SearchLimits& limits);
 
-    // Spielt die Partie bis zum Ende (Matt/Patt/Remis) oder bis maxHalfMoves
-    // erreicht ist - nuetzlich fuer automatisierte Engine-vs-Engine-Tests.
+    // Plays the game until it ends (checkmate/stalemate/draw) or
+    // until maxHalfMoves is reached—useful for automated engine-vs-engine tests.
     void runUntilGameOver(const SearchLimits& limits, int maxHalfMoves = 500);
 
     bool undoLastHalfMove();
