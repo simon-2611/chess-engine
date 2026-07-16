@@ -1,34 +1,35 @@
-# Design of the Chess-Engine
+# Chess Engine
+
+Practice project for learning C++.
+
+## Architecture
 (Diagram in German)
 ![vgl.|598](resources/schach_architektur_uebersicht.svg)
-# Header Overview
 
-Pure class declarations according to the architecture described above.
-
+## Module Overview
 | File | Responsibility |
 |---|---|
-| `Types.h` | Basic types: `Color`, `PieceType`, `Square`, `GameResult`, Castling rights |
-| `Move.h` | Lightweight move value type including special cases (Castling, En passant, Promotion) |
-| `Board.h` | Position, `makeMove`/`undoMove`, Check/result queries, FEN |
-| `MoveGenerator.h` | Pseudo-legal and legal move generation |
-| `Evaluator.h` / `MaterialEvaluator.h` / `PositionalEvaluator.h` | Interchangeable evaluation functions (Strategy Pattern) |
-| `TranspositionTable.h` | Zobrist Hash cache for previously calculated positions |
-| `SearchEngine.h` / `MinimaxSearch.h` / `AlphaBetaSearch.h` / `IterativeDeepeningSearch.h` | Interchangeable search algorithms (Strategy Pattern) |
-| `Player.h` | Abstracts Human vs. Engine as a source of moves |
-| `UserInterface.h` | Decouples display (Console/GUI/UCI) from the rest |
-| `GameController.h` | Orchestrates game flow, history, and turn switching |
+| `Types.h` | Constants & basic types |
+| `Move.h` | Move definitions and special cases |
+| `Board.h` | Board state, move execution, and FEN |
+| `MoveGenerator.h` | Move generation logic |
+| `Evaluator.*` | Evaluation heuristics (Material/Position) |
+| `TranspositionTable.h` | Zobrist Hash cache |
+| `SearchEngine.*` | Search algorithms (Minimax, Alpha-Beta, ID) |
+| `Player.h` | Input abstraction (Human vs. Engine) |
+| `UserInterface.h` | I/O and UI decoupling |
+| `GameController.h` | Game loop and turn management |
 
-## Dependency Direction
-
+## Dependency Graph
 ```
 UserInterface  <---  GameController  --->  Player (Human/Engine)
-                          |                     |
-                          v                     v
-                        Board  <---  MoveGenerator
-                                          ^
-                                          |
-                                   SearchEngine ---> Evaluator
-                                          |
-                                          v
+                        |                    |
+                        v                    v
+                      Board  <---  MoveGenerator
+                                       ^
+                                       |
+                                SearchEngine ---> Evaluator
+                                       |
+                                       v
                                 TranspositionTable (optional)
 ```
