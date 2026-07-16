@@ -4,9 +4,9 @@
 
 namespace chess {
 
-// Einfachste UserInterface-Implementierung: Textausgabe auf stdout,
-// Zugeingabe als Text auf stdin. Dient als lauffaehiger Platzhalter, bis
-// eine grafische Oberflaeche oder ein UCI-Adapter existiert.
+// Simplest UserInterface implementation: text output to stdout,
+// input as text via stdin. Serves as a functional placeholder until
+// a graphical interface or a UCI adapter exists.
 class ConsoleUI : public UserInterface {
 public:
     void displayBoard(const Board& board) override;

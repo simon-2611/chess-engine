@@ -16,8 +16,8 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# Unit-Tests standardmaessig an; per -DCHESS_BUILD_TESTS=OFF abschaltbar.
-# Benoetigt beim ersten Konfigurieren Internetzugriff (Catch2 via FetchContent).
+# Unit tests enabled by default; can be disabled via -DCHESS_BUILD_TESTS=OFF.
+# Requires internet access during initial configuration (Catch2 via FetchContent).
 option(CHESS_BUILD_TESTS "Build Unit-Tests" ON)
 
 add_subdirectory(src)
