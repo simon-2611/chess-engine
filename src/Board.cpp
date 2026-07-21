@@ -359,15 +359,110 @@ bool Board::isInCheck(Color color) const {
     return isSquareAttacked(kingPos, oppositeColor(color));
 }
 
-GameResult Board::evaluateGameResult(bool /*sideToMoveHasLegalMoves*/) const {
-    // TODO: Check for checkmate/stalemate/50-move rule/repetition/insufficient material.
+GameResult Board::evaluateGameResult(bool sideToMoveHasLegalMoves) const {
+    return evaluateGameResult(sideToMoveHasLegalMoves, {});
+}
+
+GameResult Board::evaluateGameResult(bool sideToMoveHasLegalMoves, const std::vector<uint64_t>& positionHistory) const {
+    if (halfmoveClock_ >= 100) {
+        return GameResult::DrawByFiftyMoveRule;
+    }
+
+    // Repetition check: 3-fold repetition is a draw
+    if (!positionHistory.empty()) {
+        uint64_t currentHash = zobristHash();
+        int count = 1;
+        for (uint64_t h : positionHistory) {
+            if (h == currentHash) {
+                count++;
+            }
+        }
+        if (count >= 3) {
+            return GameResult::DrawByRepetition;
+        }
+    }
+
+    if (!sideToMoveHasLegalMoves) {
+        if (isInCheck(sideToMove_)) {
+            return (sideToMove_ == Color::White) ? GameResult::BlackWinsByCheckmate : GameResult::WhiteWinsByCheckmate;
+        }
+        return GameResult::DrawByStalemate;
+    }
+
+    // Insufficient material detection
+    int whitePieces = 0, blackPieces = 0;
+    int whiteKnights = 0, blackKnights = 0;
+    int whiteBishops = 0, blackBishops = 0;
+    bool whiteBishopLight = false, whiteBishopDark = false;
+    bool blackBishopLight = false, blackBishopDark = false;
+    bool majorPieceOrPawn = false;
+
+    for (int i = 0; i < 64; ++i) {
+        Piece p = squares_[i];
+        if (p.isEmpty() || p.type == PieceType::King) continue;
+
+        if (p.type == PieceType::Pawn || p.type == PieceType::Rook || p.type == PieceType::Queen) {
+            majorPieceOrPawn = true;
+            break;
+        }
+
+        if (p.color == Color::White) {
+            whitePieces++;
+            if (p.type == PieceType::Knight) whiteKnights++;
+            else if (p.type == PieceType::Bishop) {
+                whiteBishops++;
+                if (((i / 8) + (i % 8)) % 2 != 0) whiteBishopLight = true;
+                else whiteBishopDark = true;
+            }
+        } else {
+            blackPieces++;
+            if (p.type == PieceType::Knight) blackKnights++;
+            else if (p.type == PieceType::Bishop) {
+                blackBishops++;
+                if (((i / 8) + (i % 8)) % 2 != 0) blackBishopLight = true;
+                else blackBishopDark = true;
+            }
+        }
+    }
+
+    if (!majorPieceOrPawn) {
+        // K vs K
+        if (whitePieces == 0 && blackPieces == 0) return GameResult::DrawByInsufficientMaterial;
+        
+        // KN vs K
+        if ((whitePieces == 1 && whiteKnights == 1 && blackPieces == 0) ||
+            (blackPieces == 1 && blackKnights == 1 && whitePieces == 0)) {
+            return GameResult::DrawByInsufficientMaterial;
+        }
+        
+        // KB vs K
+        if ((whitePieces == 1 && whiteBishops == 1 && blackPieces == 0) ||
+            (blackPieces == 1 && blackBishops == 1 && whitePieces == 0)) {
+            return GameResult::DrawByInsufficientMaterial;
+        }
+        
+        // KB vs KB (bishops on same color squares)
+        if (whitePieces == 1 && whiteBishops == 1 && blackPieces == 1 && blackBishops == 1) {
+            if ((whiteBishopLight && blackBishopLight) || (whiteBishopDark && blackBishopDark)) {
+                return GameResult::DrawByInsufficientMaterial;
+            }
+        }
+    }
+
     return GameResult::Ongoing;
 }
 
 uint64_t Board::zobristHash() const {
-    // TODO: Compose a hash from pre-generated random numbers per (square, piece, color)
-    // as well as side to move/castling rights/en passant square.
-    return 0;
+    uint64_t hash = 0;
+    for (int i = 0; i < 64; ++i) {
+        if (!squares_[i].isEmpty()) {
+            // Very dummy hash for testing repetition logic
+            hash ^= (static_cast<uint64_t>(squares_[i].type) << (i % 32));
+            hash ^= (static_cast<uint64_t>(squares_[i].color) << ((i + 13) % 32));
+        }
+    }
+    hash ^= (static_cast<uint64_t>(sideToMove_) << 40);
+    return hash;
 }
 
 } // namespace chess

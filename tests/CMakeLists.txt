@@ -10,6 +10,8 @@ add_executable(chess_tests
     move_test.cpp
     board_test.cpp
     move_generator_test.cpp
+    console_ui_test.cpp
+    evaluate_game_result_test.cpp
 )
 
 target_link_libraries(chess_tests PRIVATE chess_core Catch2::Catch2WithMain)

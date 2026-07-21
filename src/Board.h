@@ -49,6 +49,7 @@ public:
     bool isInCheck(Color color) const;
 
     GameResult evaluateGameResult(bool sideToMoveHasLegalMoves) const;
+    GameResult evaluateGameResult(bool sideToMoveHasLegalMoves, const std::vector<uint64_t>& positionHistory) const;
 
     // Zobrist hash of the current position, e.g. for the transposition table.
     uint64_t zobristHash() const;
