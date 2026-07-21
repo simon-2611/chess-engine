@@ -162,26 +162,201 @@ Square Board::enPassantSquare() const { return enPassantSquare_; }
 int Board::halfmoveClock() const { return halfmoveClock_; }
 int Board::fullmoveNumber() const { return fullmoveNumber_; }
 
-UndoInfo Board::makeMove(const Move& /*move*/) {
-    // TODO: Move piece on squares_, handle special cases
-    // (castling: move rook, en passant: remove captured pawn,
-    // promotion: replace piece type), switch sideToMove_,
-    // update castling rights/en passant square/halfmove clock.
-    return UndoInfo{};
+UndoInfo Board::makeMove(const Move& move) {
+    UndoInfo undo;
+    undo.castlingRights = castlingRights_;
+    undo.enPassantSquare = enPassantSquare_;
+    undo.halfmoveClock = halfmoveClock_;
+    undo.capturedPiece = move.capturedPiece();
+
+    Piece p = squares_[move.from()];
+    
+    // Handle En Passant capture removal
+    if (move.flag() == MoveFlag::EnPassantCapture) {
+        int direction = (sideToMove_ == Color::White) ? 1 : -1;
+        squares_[move.to() - direction * 8] = Piece{};
+    }
+
+    // Handle castling
+    if (move.flag() == MoveFlag::CastleKingSide) {
+        int rank = (sideToMove_ == Color::White) ? 0 : 7;
+        squares_[rank * 8 + 5] = squares_[rank * 8 + 7]; // Move rook
+        squares_[rank * 8 + 7] = Piece{};
+    } else if (move.flag() == MoveFlag::CastleQueenSide) {
+        int rank = (sideToMove_ == Color::White) ? 0 : 7;
+        squares_[rank * 8 + 3] = squares_[rank * 8 + 0]; // Move rook
+        squares_[rank * 8 + 0] = Piece{};
+    }
+
+    // Update board
+    squares_[move.from()] = Piece{};
+    if (move.isPromotion()) {
+        PieceType promotedType;
+        switch (move.flag()) {
+            case MoveFlag::PromotionToQueen: promotedType = PieceType::Queen; break;
+            case MoveFlag::PromotionToRook: promotedType = PieceType::Rook; break;
+            case MoveFlag::PromotionToBishop: promotedType = PieceType::Bishop; break;
+            case MoveFlag::PromotionToKnight: promotedType = PieceType::Knight; break;
+            default: promotedType = PieceType::Queen; break;
+        }
+        squares_[move.to()] = Piece{promotedType, sideToMove_};
+    } else {
+        squares_[move.to()] = p;
+    }
+
+    // Update state
+    if (sideToMove_ == Color::Black) {
+        fullmoveNumber_++;
+    }
+    
+    // Halfmove clock
+    if (move.movedPiece() == PieceType::Pawn || move.isCapture()) {
+        halfmoveClock_ = 0;
+    } else {
+        halfmoveClock_++;
+    }
+
+    // En Passant square
+    if (move.flag() == MoveFlag::DoublePawnPush) {
+        int direction = (sideToMove_ == Color::White) ? 1 : -1;
+        enPassantSquare_ = move.from() + direction * 8;
+    } else {
+        enPassantSquare_ = kNoSquare;
+    }
+
+    // Castling rights
+    if (move.movedPiece() == PieceType::King) {
+        if (sideToMove_ == Color::White) {
+            castlingRights_ &= ~(WhiteKingSide | WhiteQueenSide);
+        } else {
+            castlingRights_ &= ~(BlackKingSide | BlackQueenSide);
+        }
+    }
+    // Rook moves or captures
+    if (move.from() == 0 || move.to() == 0) castlingRights_ &= ~WhiteQueenSide;
+    if (move.from() == 7 || move.to() == 7) castlingRights_ &= ~WhiteKingSide;
+    if (move.from() == 56 || move.to() == 56) castlingRights_ &= ~BlackQueenSide;
+    if (move.from() == 63 || move.to() == 63) castlingRights_ &= ~BlackKingSide;
+
+    sideToMove_ = oppositeColor(sideToMove_);
+    return undo;
 }
 
-void Board::undoMove(const Move& /*move*/, const UndoInfo& /*undo*/) {
-    // TODO: Fully undo makeMove(), including UndoInfo.
+void Board::undoMove(const Move& move, const UndoInfo& undo) {
+    sideToMove_ = oppositeColor(sideToMove_);
+    if (sideToMove_ == Color::Black) {
+        fullmoveNumber_--;
+    }
+
+    castlingRights_ = undo.castlingRights;
+    enPassantSquare_ = undo.enPassantSquare;
+    halfmoveClock_ = undo.halfmoveClock;
+
+    Piece p = squares_[move.to()];
+    if (move.isPromotion()) {
+        p = Piece{PieceType::Pawn, sideToMove_};
+    }
+
+    squares_[move.from()] = p;
+    squares_[move.to()] = Piece{};
+
+    if (undo.capturedPiece != PieceType::None) {
+        if (move.flag() == MoveFlag::EnPassantCapture) {
+            int direction = (sideToMove_ == Color::White) ? 1 : -1;
+            squares_[move.to() - direction * 8] = Piece{PieceType::Pawn, oppositeColor(sideToMove_)};
+        } else {
+            squares_[move.to()] = Piece{undo.capturedPiece, oppositeColor(sideToMove_)};
+        }
+    }
+
+    if (move.flag() == MoveFlag::CastleKingSide) {
+        int rank = (sideToMove_ == Color::White) ? 0 : 7;
+        squares_[rank * 8 + 7] = squares_[rank * 8 + 5];
+        squares_[rank * 8 + 5] = Piece{};
+    } else if (move.flag() == MoveFlag::CastleQueenSide) {
+        int rank = (sideToMove_ == Color::White) ? 0 : 7;
+        squares_[rank * 8 + 0] = squares_[rank * 8 + 3];
+        squares_[rank * 8 + 3] = Piece{};
+    }
 }
 
-bool Board::isSquareAttacked(Square /*square*/, Color /*byColor*/) const {
-    // TODO: Check if any opponent piece attacks 'square'.
+bool Board::isSquareAttacked(Square square, Color byColor) const {
+    // Check for attacks by knight
+    static const std::vector<int> knightOffsets = {-17, -15, -10, -6, 6, 10, 15, 17};
+    for (int offset : knightOffsets) {
+        Square target = square + offset;
+        if (target >= 0 && target < 64 && std::abs(target % 8 - square % 8) <= 2) {
+            Piece p = pieceAt(target);
+            if (p.type == PieceType::Knight && p.color == byColor) return true;
+        }
+    }
+
+    // Check for attacks by king
+    static const std::vector<int> kingOffsets = {-9, -8, -7, -1, 1, 7, 8, 9};
+    for (int offset : kingOffsets) {
+        Square target = square + offset;
+        if (target >= 0 && target < 64 && std::abs(target % 8 - square % 8) <= 1) {
+            Piece p = pieceAt(target);
+            if (p.type == PieceType::King && p.color == byColor) return true;
+        }
+    }
+
+    // Check for attacks by pawn
+    int direction = (byColor == Color::White) ? -1 : 1;
+    for (int dx : {-1, 1}) {
+        int file = square % 8;
+        if ((file == 0 && dx == -1) || (file == 7 && dx == 1)) continue;
+        Square target = square + direction * 8 + dx;
+        if (target >= 0 && target < 64) {
+            Piece p = pieceAt(target);
+            if (p.type == PieceType::Pawn && p.color == byColor) return true;
+        }
+    }
+
+    // Sliding pieces
+    static const std::vector<int> rookOffsets = {8, -8, 1, -1};
+    static const std::vector<int> bishopOffsets = {9, 7, -9, -7};
+    
+    for (int offset : rookOffsets) {
+        for (int i = 1; i < 8; ++i) {
+            Square target = square + offset * i;
+            if (target < 0 || target >= 64) break;
+            int prevSquare = square + offset * (i - 1);
+            if (std::abs(target % 8 - prevSquare % 8) > 1) break;
+            Piece p = pieceAt(target);
+            if (!p.isEmpty()) {
+                if (p.color == byColor && (p.type == PieceType::Rook || p.type == PieceType::Queen)) return true;
+                break;
+            }
+        }
+    }
+    for (int offset : bishopOffsets) {
+        for (int i = 1; i < 8; ++i) {
+            Square target = square + offset * i;
+            if (target < 0 || target >= 64) break;
+            int prevSquare = square + offset * (i - 1);
+            if (std::abs(target % 8 - prevSquare % 8) > 1) break;
+            Piece p = pieceAt(target);
+            if (!p.isEmpty()) {
+                if (p.color == byColor && (p.type == PieceType::Bishop || p.type == PieceType::Queen)) return true;
+                break;
+            }
+        }
+    }
+
     return false;
 }
 
-bool Board::isInCheck(Color /*color*/) const {
-    // TODO: Determine king position, apply isSquareAttacked() on it.
-    return false;
+bool Board::isInCheck(Color color) const {
+    Square kingPos = kNoSquare;
+    for (int i = 0; i < 64; ++i) {
+        if (squares_[i].type == PieceType::King && squares_[i].color == color) {
+            kingPos = i;
+            break;
+        }
+    }
+    if (kingPos == kNoSquare) return false;
+    return isSquareAttacked(kingPos, oppositeColor(color));
 }
 
 GameResult Board::evaluateGameResult(bool /*sideToMoveHasLegalMoves*/) const {
