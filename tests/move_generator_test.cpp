@@ -11,6 +11,8 @@ TEST_CASE("MoveGenerator::generatePseudoLegalMoves - White Pawn start", "[movege
     
     // e2 (12) can go to e3 (20) and e4 (28)
     REQUIRE(moves.size() == 2);
+    REQUIRE(moves[0].to() == 20);
+    REQUIRE(moves[1].to() == 28);
 }
 
 TEST_CASE("MoveGenerator::generatePseudoLegalMoves - Sliding pieces", "[movegen]") {
