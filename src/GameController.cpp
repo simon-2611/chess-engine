@@ -46,7 +46,12 @@ void GameController::playNextHalfMove(const SearchLimits& limits) {
     history_.push_back(HistoryEntry{move, undo, hashBeforeMove});
 
     bool hasLegalMoves = MoveGenerator::hasAnyLegalMove(board_);
-    result_ = board_.evaluateGameResult(hasLegalMoves);
+    
+    std::vector<uint64_t> hashes;
+    for (const auto& entry : history_) {
+        hashes.push_back(entry.hashBeforeMove);
+    }
+    result_ = board_.evaluateGameResult(hasLegalMoves, hashes);
 
     if (ui_) {
         ui_->displayBoard(board_);

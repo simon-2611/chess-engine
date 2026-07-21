@@ -20,7 +20,7 @@ int main() {
     SearchLimits limits;
     limits.maxDepth = 4;
     controller.newGame();
-    controller.runUntilGameOver(limits, /*maxHalfMoves=*/50);
+    controller.runUntilGameOver(limits);
 
     return 0;
 }
