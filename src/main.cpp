@@ -15,16 +15,12 @@ int main() {
 
     auto evaluator = std::make_shared<MaterialEvaluator>();
     controller.setWhitePlayer(std::make_unique<HumanPlayer>(ui));
-    controller.setBlackPlayer(
-        std::make_unique<EnginePlayer>(std::make_unique<MinimaxSearch>(evaluator)));
-
-    std::cout << "Chess Engine - Project skeleton is running.\n";
-    std::cout << "(Board/MoveGenerator are still placeholders - see TODOs in src/.)\n";
+    controller.setBlackPlayer(std::make_unique<HumanPlayer>(ui));
 
     SearchLimits limits;
     limits.maxDepth = 4;
     controller.newGame();
-    controller.runUntilGameOver(limits, /*maxHalfMoves=*/1);
+    controller.runUntilGameOver(limits, /*maxHalfMoves=*/50);
 
     return 0;
 }
