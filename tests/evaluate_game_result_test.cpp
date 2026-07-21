@@ -43,27 +43,10 @@ TEST_CASE("evaluateGameResult: Insufficient material", "[board][evaluate]") {
         REQUIRE(board.evaluateGameResult(true) == GameResult::DrawByInsufficientMaterial);
     }
     SECTION("KB vs KB (same color bishops)") {
-        // White King at a1, White Bishop at c1 (Black sq)
-        // Black King at a8, Black Bishop at c8 (White sq) -- Wait
-        // Let's use a1 and a3 for bishops.
-        // a1 (0,0) -> Black
-        // a3 (2,0) -> Black
-        Board board = Board::fromFEN("k1b5/8/8/8/8/8/8/K1B5 w - - 0 1");
-        // a8: k, b8: 1, c8: b. k is at file 0, rank 7. b is at file 2, rank 7. (2+7)%2 = 9%2 = 1 (White)
-        // a1: K, b1: 1, c1: B. K is at 0,0. B is at file 2, rank 0. (2+0)%2 = 0 (Black)
-        // One white, one black. Not same color.
-        
-        // Let's try again.
-        // White B at c1 (2,0) -> Black
-        // Black b at d2 (3,1) -> Black
-        board = Board::fromFEN("8/8/8/8/8/8/3b4/2B1K1k1 w - - 0 1");
-        // B at c1 (index 2): (0+2)%2 = 0 (Black)
-        // b at d2 (index 11): (1+3)%2 = 0 (Black)
+        Board board = Board::fromFEN("2k5/8/5b2/2B5/8/8/8/3K4 w - - 0 1");
         REQUIRE(board.evaluateGameResult(true) == GameResult::DrawByInsufficientMaterial);
     }
     SECTION("KB vs KB (different color bishops)") {
-        // a1 (0,0) -> 0 (Black)
-        // b1 (0,1) -> 1 (White)
         Board board = Board::fromFEN("k7/8/8/8/8/8/8/KBB5 w - - 0 1");
         REQUIRE(board.evaluateGameResult(true) == GameResult::Ongoing);
     }
