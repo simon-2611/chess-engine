@@ -6,6 +6,7 @@
 #include <algorithm>
 
 #include "MoveGenerator.h"
+#include "Types.h"
 
 namespace chess {
 
@@ -38,13 +39,14 @@ void ConsoleUI::displayBoard(const Board& board) {
         out_ << " " << rank + 1 << "\n";
     }
     out_ << "  a b c d e f g h\n";
+    out_ << "FEN: " << board.toFEN() << "\n";
 }
 
 Move ConsoleUI::requestHumanMove(const Board& board) {
     std::vector<Move> legalMoves = MoveGenerator::generateLegalMoves(board);
 
     while (true) {
-        out_ << "Enter move (e.g. e2e4): ";
+        out_ << (board.sideToMove() == Color::White ? "White" : "Black") << "'s turn! Enter move (e.g. e2e4): ";
         std::string input;
         if (!std::getline(in_, input) || input.empty()) {
             continue;
