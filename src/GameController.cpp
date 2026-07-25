@@ -62,6 +62,16 @@ void GameController::playNextHalfMove(const SearchLimits& limits) {
 }
 
 void GameController::runUntilGameOver(const SearchLimits& limits, int maxHalfMoves) {
+    // Parsing positions where the game is already over should also be possible
+    bool hasLegalMoves = MoveGenerator::hasAnyLegalMove(board_);
+    result_ = board_.evaluateGameResult(hasLegalMoves);
+    if (ui_) {
+        ui_->displayBoard(board_);
+        if (result_ != GameResult::Ongoing) {
+            ui_->announceResult(result_);
+        }
+    }
+
     for (int i = 0; i < maxHalfMoves && result_ == GameResult::Ongoing; ++i) {
         playNextHalfMove(limits);
     }
