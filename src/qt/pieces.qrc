@@ -1,0 +1,17 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/pieces">
+        <file alias="white_pawn.svg">../../resources/pieces/white_pawn.svg</file>
+        <file alias="white_knight.svg">../../resources/pieces/white_knight.svg</file>
+        <file alias="white_bishop.svg">../../resources/pieces/white_bishop.svg</file>
+        <file alias="white_rook.svg">../../resources/pieces/white_rook.svg</file>
+        <file alias="white_queen.svg">../../resources/pieces/white_queen.svg</file>
+        <file alias="white_king.svg">../../resources/pieces/white_king.svg</file>
+        <file alias="black_pawn.svg">../../resources/pieces/black_pawn.svg</file>
+        <file alias="black_knight.svg">../../resources/pieces/black_knight.svg</file>
+        <file alias="black_bishop.svg">../../resources/pieces/black_bishop.svg</file>
+        <file alias="black_rook.svg">../../resources/pieces/black_rook.svg</file>
+        <file alias="black_queen.svg">../../resources/pieces/black_queen.svg</file>
+        <file alias="black_king.svg">../../resources/pieces/black_king.svg</file>
+    </qresource>
+</RCC>
