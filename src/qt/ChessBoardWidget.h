@@ -18,7 +18,7 @@ namespace chess {
 
 // Custom board view: click-select / click-move with selection and legal-move
 // highlights. Piece SVGs are loaded from the :/pieces/ resource prefix when
-// present; otherwise Unicode chess glyphs are used (no hand-drawn art).
+// present; otherwise Unicode chess glyphs are used.
 class ChessBoardWidget : public QWidget {
     Q_OBJECT
 

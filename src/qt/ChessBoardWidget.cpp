@@ -94,7 +94,7 @@ void ChessBoardWidget::ensureRenderersLoaded() {
 }
 
 QChar ChessBoardWidget::unicodeGlyph(const Piece& piece) {
-    // Unicode chess symbols (U+2654..U+265F) — not hand-drawn artwork.
+    // Unicode chess symbols (U+2654..U+265F).
     if (piece.isEmpty()) {
         return QChar();
     }
